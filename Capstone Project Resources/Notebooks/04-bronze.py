@@ -24,17 +24,18 @@ class Bronze():
                         .option("header", "true")
                         .load(self.landing_zone + "/registered_users_bz")
                         .withColumn("load_time", F.current_timestamp()) 
-                        .withColumn("source_file", F.input_file_name())
+                        .withColumn("source_file",F.lit("registered_users_bz"))
                     )
                         
         # Use append mode because bronze layer is expected to insert only from source
         stream_writer = df_stream.writeStream \
                                  .format("delta") \
                                  .option("checkpointLocation", self.checkpoint_base + "/registered_users_bz") \
+                                 .option("mergeSchema", "true") \
                                  .outputMode("append") \
                                  .queryName("registered_users_bz_ingestion_stream")
         
-        spark.sparkContext.setLocalProperty("spark.scheduler.pool", "bronze_p2")
+        #spark.sparkContext.setLocalProperty("spark.scheduler.pool", "bronze_p2")
         
         if once == True:
             return stream_writer.trigger(availableNow=True).toTable(f"{self.catalog}.{self.db_name}.registered_users_bz")
@@ -53,17 +54,18 @@ class Bronze():
                         .option("header", "true") 
                         .load(self.landing_zone + "/gym_logins_bz") 
                         .withColumn("load_time", F.current_timestamp())
-                        .withColumn("source_file", F.input_file_name())
+                        .withColumn("source_file",F.lit("gym_logins_bz"))
                     )
         
         # Use append mode because bronze layer is expected to insert only from source
         stream_writer = df_stream.writeStream \
                                  .format("delta") \
                                  .option("checkpointLocation", self.checkpoint_base + "/gym_logins_bz") \
+                                 .option("mergeSchema", "true") \
                                  .outputMode("append") \
                                  .queryName("gym_logins_bz_ingestion_stream")
         
-        spark.sparkContext.setLocalProperty("spark.scheduler.pool", "bronze_p2")
+        #spark.sparkContext.setLocalProperty("spark.scheduler.pool", "bronze_p2")
             
         if once == True:
             return stream_writer.trigger(availableNow=True).toTable(f"{self.catalog}.{self.db_name}.gym_logins_bz")
@@ -83,7 +85,7 @@ class Bronze():
                         .option("cloudFiles.format", "json")
                         .load(self.landing_zone + "/kafka_multiplex_bz")                        
                         .withColumn("load_time", F.current_timestamp())       
-                        .withColumn("source_file", F.input_file_name())
+                        .withColumn("source_file",F.lit("kafka_multiplex"))
                         .join(F.broadcast(df_date_lookup), 
                               [F.to_date((F.col("timestamp")/1000).cast("timestamp")) == F.col("date")], 
                               "left")
@@ -93,10 +95,11 @@ class Bronze():
         stream_writer = df_stream.writeStream \
                                  .format("delta") \
                                  .option("checkpointLocation", self.checkpoint_base + "/kafka_multiplex_bz") \
+                                 .option("mergeSchema", "true") \
                                  .outputMode("append") \
                                  .queryName("kafka_multiplex_bz_ingestion_stream")
         
-        spark.sparkContext.setLocalProperty("spark.scheduler.pool", "bronze_p1")
+       # spark.sparkContext.setLocalProperty("spark.scheduler.pool", "bronze_p1")
         
         if once == True:
             return stream_writer.trigger(availableNow=True).toTable(f"{self.catalog}.{self.db_name}.kafka_multiplex_bz")
@@ -133,3 +136,17 @@ class Bronze():
         self.assert_count("kafka_multiplex_bz", 16 if sets == 1 else 32, "topic='workout'")
         self.assert_count("kafka_multiplex_bz", sets * 253801, "topic='bpm'")
         print(f"Bronze layer validation completed in {int(time.time()) - start} seconds")                
+
+# COMMAND ----------
+
+b=Bronze("`sbit-dev-aws`")  
+
+# COMMAND ----------
+
+b.consume()
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC USE CATALOG `sbit-dev-aws`;
+# MAGIC select * from sbit_db.gym_logins_bz

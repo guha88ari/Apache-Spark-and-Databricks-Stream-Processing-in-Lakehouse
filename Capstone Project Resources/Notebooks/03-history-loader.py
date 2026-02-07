@@ -37,3 +37,21 @@ class HistoryLoader():
         print(f"\nStarting historical data load validation...")
         self.assert_count(f"date_lookup", 365)
         print(f"Historical data load validation completed in {int(time.time()) - start} seconds")               
+
+# COMMAND ----------
+
+HL = HistoryLoader("`sbit-dev-aws`")
+
+# COMMAND ----------
+
+HL.load_history()
+
+# COMMAND ----------
+
+# MAGIC %sql 
+# MAGIC USE CATALOG `sbit-dev-aws`;
+# MAGIC select * from sbit_db.date_lookup
+
+# COMMAND ----------
+
+

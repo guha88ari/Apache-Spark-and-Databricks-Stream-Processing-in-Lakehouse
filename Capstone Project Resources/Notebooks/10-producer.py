@@ -77,3 +77,11 @@ class Producer():
         self._validate_count("json","kafka_multiplex_bz/4-workout", 16 if sets == 1 else 32)  
         self._validate_count("csv", "gym_logins_bz/5-gym_logins", 8 if sets == 1 else 16)
         #print(f"Test data validation completed in {int(time.time()) - start} seconds")
+
+# COMMAND ----------
+
+producer = Producer()
+
+# COMMAND ----------
+
+producer.produce(2)

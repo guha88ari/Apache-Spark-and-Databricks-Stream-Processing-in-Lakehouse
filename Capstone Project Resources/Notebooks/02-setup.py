@@ -13,7 +13,7 @@ class SetupHelper():
         self.initialized = False
         
     def create_db(self):
-        spark.catalog.clearCache()
+        # spark.catalog.clearCache()
         print(f"Creating the database {self.catalog}.{self.db_name}...", end='')
         spark.sql(f"CREATE DATABASE IF NOT EXISTS {self.catalog}.{self.db_name}")
         spark.sql(f"USE {self.catalog}.{self.db_name}")
