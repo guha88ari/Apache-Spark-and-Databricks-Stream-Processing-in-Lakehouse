@@ -1,4 +1,5 @@
 # Databricks notebook source
+#hi
 class batchWC():
     def __init__(self):
         self.base_data_dir = "/FileStore/data_spark_streaming_scholarnest"
